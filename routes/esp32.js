@@ -125,7 +125,7 @@ setInterval(async () => {
     if (error || !employees) return;
 
     const now = new Date();
-    const TIMEOUT_MS = 15000; // 15 seconds
+    const TIMEOUT_MS = 30000; // 30 seconds (increased from 15s to prevent flickering)
 
     for (const emp of employees) {
       if (!emp.history || emp.history.length === 0) continue;
