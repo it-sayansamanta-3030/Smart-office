@@ -8,21 +8,33 @@ function todayStr() {
 
 // GET /api/attendance — get attendance records (optional ?date=YYYY-MM-DD filter)
 router.get('/', async (req, res) => {
-  const { date } = req.query;
+  const targetDate = req.query.date || todayStr();
   
-  let query = supabase.from('attendance').select('*, employee:employees(*)').order('id', { ascending: false });
-  if (date) query = query.eq('date', date);
+  // Fetch all employees
+  const { data: employees, error: empErr } = await supabase.from('employees').select('*').order('id', { ascending: true });
+  if (empErr) return res.status(500).json({ status: 'error', message: empErr.message });
 
-  const { data, error } = await query;
-  if (error) return res.status(500).json({ status: 'error', message: error.message });
+  // Fetch attendance records for the target date
+  const { data: attendance, error: attErr } = await supabase.from('attendance')
+    .select('*')
+    .eq('date', targetDate);
+  if (attErr) return res.status(500).json({ status: 'error', message: attErr.message });
 
-  const enriched = data.map(r => ({
-    ...r,
-    employeeName: r.employee ? r.employee.name : 'Unknown',
-    employeeRole: r.employee ? r.employee.role : '',
-    employeeAvatar: r.employee ? r.employee.avatar : '??',
-    employee: undefined
-  }));
+  // Merge them
+  const enriched = employees.map(emp => {
+    const record = attendance.find(a => a.employeeId === emp.id);
+    return {
+      employeeId: emp.id,
+      employeeName: emp.name,
+      employeeRole: emp.role,
+      empIdStr: emp.empId,
+      date: targetDate,
+      status: record ? record.status : 'Absent', // e.g. on-time, late, or Absent
+      checkIn: record ? record.checkIn : null,
+      checkOut: record ? record.checkOut : null,
+      recordId: record ? record.id : null
+    };
+  });
 
   res.json({ status: 'success', data: enriched });
 });
