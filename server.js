@@ -80,7 +80,7 @@ async function startServer() {
     app.use(express.static(frontendDist));
 
     // SPA fallback — any non-API route serves index.html
-    app.get('/{*splat}', (req, res) => {
+    app.get('*', (req, res) => {
       res.sendFile(path.join(frontendDist, 'index.html'));
     });
   }
