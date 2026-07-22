@@ -16,7 +16,6 @@ export default function Attendance() {
   useEffect(() => {
     fetchLogs();
     
-    // Listen for SSE updates to refresh data live
     const source = new EventSource(`${API_BASE}/esp32/stream`);
     source.onmessage = (event) => {
       try {
@@ -26,7 +25,14 @@ export default function Attendance() {
         }
       } catch (e) {}
     };
-    return () => source.close();
+    
+    // Fallback: Hard refresh from database every 15 seconds in case Render drops the live stream
+    const pollTimer = setInterval(() => fetchLogs(), 15000);
+    
+    return () => {
+      source.close();
+      clearInterval(pollTimer);
+    };
   }, []);
 
   const handleAction = async (employeeId, type) => {
