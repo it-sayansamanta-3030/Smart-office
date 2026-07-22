@@ -35,12 +35,12 @@ const decodeEmployee = (row) => {
     empId: row.email,
     gender: row.avatar,
     role: extra.role || row.role || '',
-    currentRoom: extra.currentRoom || (row.status !== 'Out' ? row.status : null),
+    currentRoom: extra.currentRoom || (['Main Hallway', 'Cafeteria'].includes(row.status) ? row.status : null),
     lastKnownRoom: extra.lastKnownRoom || null,
     timeInRoom: extra.timeInRoom || 0,
     totalHoursToday: extra.totalHoursToday || 0,
     history: extra.history || [],
-    status: row.status === 'Out' ? 'Out' : 'In'
+    status: (extra.currentRoom || ['Main Hallway', 'Cafeteria'].includes(row.status)) ? 'In' : 'Out'
   };
 };
 

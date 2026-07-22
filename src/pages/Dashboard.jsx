@@ -15,6 +15,7 @@ export default function Dashboard() {
   
   // ESP32 Connection state (mock)
   const [espConnected, setEspConnected] = useState(false);
+  const [currentTime, setCurrentTime] = useState(new Date());
 
   const fetchEmployees = async () => {
     try {
@@ -43,6 +44,26 @@ export default function Dashboard() {
     };
     return () => source.close();
   }, []);
+
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(new Date()), 60000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const formatLiveTime = (emp) => {
+    if (!emp.currentRoom || !emp.history || emp.history.length === 0) return '-';
+    const lastEvent = emp.history[emp.history.length - 1];
+    if (lastEvent.room !== emp.currentRoom) return '-';
+    
+    const entryTime = new Date(lastEvent.timestamp);
+    const diffMs = Math.max(0, currentTime - entryTime);
+    const diffMins = Math.floor(diffMs / 60000);
+    
+    if (diffMins < 60) return `${diffMins}m`;
+    const hrs = Math.floor(diffMins / 60);
+    const mins = diffMins % 60;
+    return `${hrs}h ${mins}m`;
+  };
 
   const handleOpenModal = (emp = null) => {
     if (emp) {
@@ -261,13 +282,14 @@ export default function Dashboard() {
                     </div>
                   </td>
                   <td>
-                    <span className={`badge ${emp.status === 'In' ? 'active' : 'inactive'}`}>
-                      {emp.status || 'Out'}
-                    </span>
+                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                      <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: emp.status === 'In' ? '#10b981' : '#ef4444' }}></div>
+                      <span style={{ color: emp.status === 'In' ? '#10b981' : '#ef4444', fontWeight: 600 }}>{emp.status || 'Out'}</span>
+                    </div>
                   </td>
                   <td style={{ color: '#e2e8f0' }}>{emp.currentRoom || '-'}</td>
-                  <td style={{ color: '#94a3b8' }}>{emp.timeInRoom ? `${emp.timeInRoom} min` : '-'}</td>
-                  <td style={{ color: '#94a3b8' }}>{emp.totalHoursToday ? `${emp.totalHoursToday} hrs` : '-'}</td>
+                  <td style={{ color: '#94a3b8' }}>{formatLiveTime(emp)}</td>
+                  <td style={{ color: '#94a3b8' }}>-</td>
                   <td>
                     <div style={{ display: 'flex', gap: '8px' }}>
                       <button onClick={() => handleOpenModal(emp)} style={{ background: 'transparent', border: 'none', color: '#94a3b8', cursor: 'pointer' }}><Edit size={16} /></button>
