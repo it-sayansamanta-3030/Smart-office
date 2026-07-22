@@ -57,12 +57,28 @@ export default function Dashboard() {
   }, []);
 
   const formatLiveTime = (emp) => {
-    if (!emp.currentRoom || !emp.history || emp.history.length === 0) return '-';
-    const lastEvent = emp.history[emp.history.length - 1];
-    if (lastEvent.room !== emp.currentRoom) return '-';
+    if (emp.status !== 'In' || !emp.history || emp.history.length === 0) return '-';
     
-    const entryTime = new Date(lastEvent.timestamp);
-    const diffMs = Math.max(0, currentTime - entryTime);
+    // Find the true entry time by tracing backwards through continuous pings
+    let entryTime = new Date(emp.history[emp.history.length - 1].timestamp);
+    
+    for (let i = emp.history.length - 1; i > 0; i--) {
+      const currentEvent = emp.history[i];
+      const prevEvent = emp.history[i - 1];
+      
+      // If they changed rooms, the previous event isn't part of this session
+      if (currentEvent.room !== prevEvent.room) break;
+      
+      // If there was a gap of more than 60 seconds, they left and came back
+      const currTime = new Date(currentEvent.timestamp).getTime();
+      const prevTime = new Date(prevEvent.timestamp).getTime();
+      if (currTime - prevTime > 60000) break;
+      
+      // Otherwise, the session started at least as early as the previous event
+      entryTime = new Date(prevEvent.timestamp);
+    }
+    
+    const diffMs = Math.max(0, currentTime.getTime() - entryTime.getTime());
     
     const hrs = Math.floor(diffMs / 3600000);
     const mins = Math.floor((diffMs % 3600000) / 60000);
