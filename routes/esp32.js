@@ -29,11 +29,11 @@ router.post('/ping', async (req, res) => {
     return res.status(400).json({ success: false, message: 'Missing employeeId or roomId' });
   }
 
-  // 1. Find employee by email (which acts as empId)
+  // 1. Find employee by the dedicated empId column
   const { data: employee, error: fetchError } = await supabase
     .from('employees')
     .select('*')
-    .eq('email', employeeId)
+    .eq('empId', employeeId)
     .single();
 
   if (fetchError || !employee) {
@@ -41,14 +41,8 @@ router.post('/ping', async (req, res) => {
     return res.status(404).json({ success: false, message: 'Employee not found' });
   }
 
-  // Decode extra data
-  let extra = {};
-  try {
-    extra = JSON.parse(employee.department || '{}');
-  } catch(e) {}
-
   // 2. Update employee record
-  const history = extra.history || [];
+  const history = employee.history || [];
   const pingEvent = {
     room: roomId,
     timestamp: new Date().toISOString()
@@ -56,13 +50,11 @@ router.post('/ping', async (req, res) => {
   
   history.push(pingEvent);
   
-  extra.currentRoom = roomId;
-  extra.lastKnownRoom = roomId;
-  extra.history = history;
-
   const updates = {
-    status: roomId, // Store current room in status
-    department: JSON.stringify(extra)
+    status: roomId, // We can still optionally put roomId in status or keep it for backwards compatibility
+    currentRoom: roomId,
+    lastKnownRoom: roomId,
+    history: history
   };
 
   const { error: updateError } = await supabase
@@ -80,7 +72,7 @@ router.post('/ping', async (req, res) => {
     type: 'ping',
     data: {
       employeeName: employee.name,
-      empId: employee.email, // We use email column for empId
+      empId: employee.empId,
       room: roomId,
       timestamp: pingEvent.timestamp
     }
