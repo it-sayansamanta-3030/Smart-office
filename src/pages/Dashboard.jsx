@@ -46,7 +46,7 @@ export default function Dashboard() {
   }, []);
 
   useEffect(() => {
-    const timer = setInterval(() => setCurrentTime(new Date()), 10000);
+    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
 
@@ -57,12 +57,14 @@ export default function Dashboard() {
     
     const entryTime = new Date(lastEvent.timestamp);
     const diffMs = Math.max(0, currentTime - entryTime);
-    const diffMins = Math.floor(diffMs / 60000);
     
-    if (diffMins < 60) return `${diffMins}m`;
-    const hrs = Math.floor(diffMins / 60);
-    const mins = diffMins % 60;
-    return `${hrs}h ${mins}m`;
+    const hrs = Math.floor(diffMs / 3600000);
+    const mins = Math.floor((diffMs % 3600000) / 60000);
+    const secs = Math.floor((diffMs % 60000) / 1000);
+    
+    if (hrs > 0) return `${hrs}h ${mins}m ${secs}s`;
+    if (mins > 0) return `${mins}m ${secs}s`;
+    return `${secs}s`;
   };
 
   const handleOpenModal = (emp = null) => {

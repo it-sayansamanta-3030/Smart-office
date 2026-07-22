@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { CheckCircle, LogOut } from 'lucide-react';
-import { getAttendance, checkIn, checkOut } from '../api';
+import { getAttendance, checkIn, checkOut, API_BASE } from '../api';
 
 export default function Attendance() {
   const [logs, setLogs] = useState([]);
@@ -15,6 +15,18 @@ export default function Attendance() {
 
   useEffect(() => {
     fetchLogs();
+    
+    // Listen for SSE updates to refresh data live
+    const source = new EventSource(`${API_BASE}/esp32/stream`);
+    source.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        if (data.type === 'ping' || data.type === 'timeout') {
+          fetchLogs();
+        }
+      } catch (e) {}
+    };
+    return () => source.close();
   }, []);
 
   const handleAction = async (employeeId, type) => {
@@ -53,7 +65,9 @@ export default function Attendance() {
                 <tr key={log.employeeId}>
                   <td>
                     <div className="employee-row">
-                      <div className="avatar">{log.employeeAvatar || '??'}</div>
+                      <div className="avatar">
+                        {log.employeeName ? log.employeeName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() : '??'}
+                      </div>
                       <div>
                         <div className="employee-name">{log.employeeName || 'Unknown'}</div>
                         <div className="stat-label">{log.employeeRole || 'Employee'}</div>
