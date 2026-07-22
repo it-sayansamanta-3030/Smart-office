@@ -46,7 +46,7 @@ export default function Dashboard() {
   }, []);
 
   useEffect(() => {
-    const timer = setInterval(() => setCurrentTime(new Date()), 60000);
+    const timer = setInterval(() => setCurrentTime(new Date()), 10000);
     return () => clearInterval(timer);
   }, []);
 
@@ -274,10 +274,12 @@ export default function Dashboard() {
                 <tr key={emp.id}>
                   <td>
                     <div className="employee-row">
-                      <div className="avatar" style={{ fontSize: '12px', width: '36px', height: '36px' }}>{emp.avatar || '??'}</div>
+                      <div className="avatar" style={{ fontSize: '12px', width: '36px', height: '36px' }}>
+                        {emp.name ? emp.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() : '??'}
+                      </div>
                       <div>
                         <div className="employee-name">{emp.name}</div>
-                        <div className="stat-label">ID: {emp.empId || '-'} • {emp.role || emp.department}</div>
+                        <div className="stat-label">ID: {emp.empId || '-'} • {emp.role || '-'}</div>
                       </div>
                     </div>
                   </td>

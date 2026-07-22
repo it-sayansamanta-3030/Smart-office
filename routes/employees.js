@@ -19,8 +19,8 @@ router.post('/', async (req, res) => {
   const payload = {
     empId: req.body.empId,
     name: req.body.name,
-    avatar: req.body.gender,
-    department: req.body.role,
+    gender: req.body.gender,
+    role: req.body.role,
     status: 'Out'
   };
   const { data, error } = await supabase.from('employees').insert(payload).select();
@@ -33,8 +33,8 @@ router.put('/:id', async (req, res) => {
   const payload = {
     empId: req.body.empId,
     name: req.body.name,
-    avatar: req.body.gender,
-    department: req.body.role
+    gender: req.body.gender,
+    role: req.body.role
   };
   const { data, error } = await supabase.from('employees').update(payload).eq('id', id).select();
   if (error) return res.status(500).json({ status: 'error', message: error.message });

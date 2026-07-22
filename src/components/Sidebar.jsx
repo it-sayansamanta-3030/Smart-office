@@ -5,11 +5,9 @@ import { useState } from 'react';
 export default function Sidebar() {
   const [isOpen, setIsOpen] = useState(false);
   const toggle = () => setIsOpen(!isOpen);
-
   const links = [
     { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
     { to: '/attendance', icon: Users, label: 'Attendance' },
-    { to: '/tasks', icon: ListTodo, label: 'Tasks' },
   ];
 
   return (
