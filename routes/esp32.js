@@ -51,7 +51,7 @@ router.post('/ping', async (req, res) => {
   history.push(pingEvent);
   
   const updates = {
-    status: roomId, // We can still optionally put roomId in status or keep it for backwards compatibility
+    status: 'In',
     currentRoom: roomId,
     lastKnownRoom: roomId,
     history: history
@@ -85,5 +85,58 @@ router.post('/ping', async (req, res) => {
   // 4. Respond to ESP32
   res.json({ success: true });
 });
+
+// --- LIVE TRACKING BACKGROUND SWEEPER ---
+// Runs every 10 seconds to check for timed-out employees
+setInterval(async () => {
+  try {
+    // 1. Fetch all employees currently 'In' a room
+    const { data: employees, error } = await supabase
+      .from('employees')
+      .select('id, empId, name, currentRoom, history')
+      .eq('status', 'In')
+      .not('currentRoom', 'is', null);
+
+    if (error || !employees) return;
+
+    const now = new Date();
+    const TIMEOUT_MS = 60000; // 60 seconds
+
+    for (const emp of employees) {
+      if (!emp.history || emp.history.length === 0) continue;
+
+      // Check the most recent ping timestamp
+      const lastPing = new Date(emp.history[emp.history.length - 1].timestamp);
+      
+      // If the last ping was more than 60 seconds ago, mark them as 'Out'
+      if (now - lastPing > TIMEOUT_MS) {
+        // Update database
+        await supabase
+          .from('employees')
+          .update({ currentRoom: null, status: 'Out' })
+          .eq('id', emp.id);
+
+        // Broadcast a timeout SSE event so frontend updates instantly
+        const eventData = JSON.stringify({
+          type: 'timeout',
+          data: {
+            empId: emp.empId,
+            employeeName: emp.name,
+            room: emp.currentRoom
+          }
+        });
+
+        clients.forEach(client => {
+          try {
+            client.write(`data: ${eventData}\n\n`);
+          } catch(e) {}
+        });
+        console.log(`[Sweeper] Marked ${emp.empId} as Out (timeout)`);
+      }
+    }
+  } catch (err) {
+    console.error('[Sweeper Error]', err);
+  }
+}, 10000);
 
 module.exports = router;

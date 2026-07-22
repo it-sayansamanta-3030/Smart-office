@@ -36,7 +36,7 @@ export default function Dashboard() {
     source.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
-        if (data.type === 'ping') {
+        if (data.type === 'ping' || data.type === 'timeout') {
           // Re-fetch to get updated state
           fetchEmployees();
         }
