@@ -16,15 +16,27 @@ router.get('/', async (req, res) => {
 });
 
 router.post('/', async (req, res) => {
-  const { data, error } = await supabase.from('employees').insert(req.body).select();
+  const payload = {
+    empId: req.body.empId,
+    name: req.body.name,
+    avatar: req.body.gender,
+    department: req.body.role,
+    status: 'Out'
+  };
+  const { data, error } = await supabase.from('employees').insert(payload).select();
   if (error) return res.status(500).json({ status: 'error', message: error.message });
   res.status(201).json({ status: 'success', data: data[0] });
 });
 
 router.put('/:id', async (req, res) => {
   const { id } = req.params;
-  
-  const { data, error } = await supabase.from('employees').update(req.body).eq('id', id).select();
+  const payload = {
+    empId: req.body.empId,
+    name: req.body.name,
+    avatar: req.body.gender,
+    department: req.body.role
+  };
+  const { data, error } = await supabase.from('employees').update(payload).eq('id', id).select();
   if (error) return res.status(500).json({ status: 'error', message: error.message });
   if (!data || data.length === 0) return res.status(404).json({ status: 'error', message: 'Not found' });
 
