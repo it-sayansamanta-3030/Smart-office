@@ -265,7 +265,7 @@ export default function Dashboard() {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
         <div className="page-header animate-in" style={{ margin: 0 }}>
           <h1>Dashboard</h1>
-          <p>Live overview of office occupancy</p>
+          <p>Live overview of office occupancy • {currentTime.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
         </div>
         
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>

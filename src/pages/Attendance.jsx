@@ -118,8 +118,7 @@ export default function Attendance() {
   };
 
   const downloadReport = () => {
-    const monthStr = selectedDate.substring(0, 7); // YYYY-MM
-    window.location.href = `${API_BASE}/attendance/export?month=${monthStr}&t=${Date.now()}`;
+    window.location.href = `${API_BASE}/attendance/export?date=${selectedDate}&t=${Date.now()}`;
   };
 
   return (
@@ -145,7 +144,7 @@ export default function Attendance() {
             onMouseOver={(e) => e.target.style.background = '#2980b9'}
             onMouseOut={(e) => e.target.style.background = '#3498db'}
           >
-            ↓ Download Monthly Report
+            ↓ Download Daily Report
           </button>
           <input 
             type="date" 

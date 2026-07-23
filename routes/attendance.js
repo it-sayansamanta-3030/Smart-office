@@ -107,18 +107,25 @@ function calculateRealTimeDetails(history, targetDate) {
   return { mins, in: firstIn, out: lastOut };
 }
 
-// GET /api/attendance/export?month=YYYY-MM — export CSV
+// GET /api/attendance/export — export CSV
 router.get('/export', async (req, res) => {
   const month = req.query.month;
-  if (!month) return res.status(400).json({ status: 'error', message: 'month query param required (YYYY-MM)' });
+  const specificDate = req.query.date;
+  
+  if (!month && !specificDate) return res.status(400).json({ status: 'error', message: 'month or date query param required' });
   
   const { data: employees, error: empErr } = await supabase.from('employees').select('*').order('id', { ascending: true });
   if (empErr) return res.status(500).json({ status: 'error', message: empErr.message });
   
-  const { data: attendance, error: attErr } = await supabase.from('attendance')
-    .select('*')
-    .gte('date', `${month}-01`)
-    .lte('date', `${month}-31`);
+  let query = supabase.from('attendance').select('*');
+  
+  if (specificDate) {
+    query = query.eq('date', specificDate);
+  } else {
+    query = query.gte('date', `${month}-01`).lte('date', `${month}-31`);
+  }
+  
+  const { data: attendance, error: attErr } = await query;
   if (attErr) return res.status(500).json({ status: 'error', message: attErr.message });
 
   // Group attendance by employee and date
@@ -153,7 +160,8 @@ router.get('/export', async (req, res) => {
   });
 
   res.setHeader('Content-Type', 'text/csv');
-  res.setHeader('Content-Disposition', `attachment; filename="attendance-${month}.csv"`);
+  const filename = specificDate ? `attendance-${specificDate}.csv` : `attendance-${month}.csv`;
+  res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
   res.send(csvContent);
 });
 
