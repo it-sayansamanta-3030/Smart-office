@@ -26,9 +26,15 @@ router.get('/stream', (req, res) => {
   // Send an initial connected message
   res.write('data: {"type": "connected"}\n\n');
 
+  // Keep connection alive to prevent Render from dropping idle connections
+  const heartbeat = setInterval(() => {
+    res.write(':\n\n'); // Send empty comment
+  }, 15000);
+
   clients.push(res);
 
   req.on('close', () => {
+    clearInterval(heartbeat);
     clients = clients.filter(client => client !== res);
   });
 });
