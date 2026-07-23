@@ -1,8 +1,14 @@
 export const API_BASE = '/api';
 
 async function request(path, options = {}) {
-  const res = await fetch(`${API_BASE}${path}`, {
+  // Append a cache-busting timestamp to GET requests just to be absolutely sure
+  const urlPath = (!options.method || options.method === 'GET') 
+    ? (path.includes('?') ? `${path}&_t=${Date.now()}` : `${path}?_t=${Date.now()}`)
+    : path;
+
+  const res = await fetch(`${API_BASE}${urlPath}`, {
     headers: { 'Content-Type': 'application/json', ...options.headers },
+    cache: 'no-store', // Disable browser caching
     ...options,
   });
   const data = await res.json();
