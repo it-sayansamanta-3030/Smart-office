@@ -137,7 +137,7 @@ setInterval(async () => {
     if (error || !employees) return;
 
     const now = new Date();
-    const TIMEOUT_MS = 25000; // 25 seconds as requested based on 8s hardware ping
+    const TIMEOUT_MS = 38000; // 38 seconds to allow for occasional dropped Wi-Fi packets
 
     for (const emp of employees) {
       if (!emp.history || emp.history.length === 0) continue;
