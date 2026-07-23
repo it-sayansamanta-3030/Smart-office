@@ -59,7 +59,7 @@ router.post('/ping', async (req, res) => {
   }
 
   // --- AUTO CHECK-IN LOGIC ---
-  if (employee.status !== 'In') {
+  if (!employee.currentRoom) {
     const { todayStr, timeStr, hour, min } = getIST();
     const { data: existing } = await supabase.from('attendance')
       .select('*').eq('employeeId', employee.id).eq('date', todayStr).maybeSingle();
@@ -94,7 +94,6 @@ router.post('/ping', async (req, res) => {
   history.push(pingEvent);
   
   const updates = {
-    status: 'In',
     currentRoom: roomId,
     lastKnownRoom: roomId,
     history: history
@@ -151,7 +150,6 @@ setInterval(async () => {
     const { data: employees, error } = await supabase
       .from('employees')
       .select('id, empId, name, currentRoom, history')
-      .eq('status', 'In')
       .not('currentRoom', 'is', null);
 
     if (error || !employees) return;
@@ -167,10 +165,10 @@ setInterval(async () => {
       
       // If the last ping was more than 60 seconds ago, mark them as 'Out'
       if (now - lastPing > TIMEOUT_MS) {
-        // Update database
+        // Update database (mark as Out)
         await supabase
           .from('employees')
-          .update({ currentRoom: null, status: 'Out' })
+          .update({ currentRoom: null })
           .eq('id', emp.id);
 
         // --- AUTO CHECK-OUT LOGIC ---
