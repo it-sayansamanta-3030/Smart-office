@@ -16,6 +16,7 @@ export default function Dashboard() {
   // ESP32 Connection state (mock)
   const [espConnected, setEspConnected] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [unauthorizedAlert, setUnauthorizedAlert] = useState(null);
 
   const fetchEmployees = async () => {
     try {
@@ -50,6 +51,10 @@ export default function Dashboard() {
         if (data.type === 'ping' || data.type === 'timeout') {
           // Re-fetch to get updated state
           fetchEmployees();
+        }
+        if (data.type === 'alert') {
+          setUnauthorizedAlert(data.data.message);
+          setTimeout(() => setUnauthorizedAlert(null), 10000); // Clear after 10s
         }
       } catch (e) {}
     };
@@ -243,6 +248,24 @@ export default function Dashboard() {
   return (
     <div style={{ position: 'relative' }}>
       {/* Header */}
+      {unauthorizedAlert && (
+        <div style={{
+          backgroundColor: '#ef4444',
+          color: '#fff',
+          padding: '16px',
+          borderRadius: '8px',
+          marginBottom: '24px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          fontWeight: 'bold',
+          boxShadow: '0 4px 6px -1px rgba(239, 68, 68, 0.4)',
+          animation: 'pulse 2s infinite'
+        }}>
+          <span>⚠️ {unauthorizedAlert}</span>
+          <button onClick={() => setUnauthorizedAlert(null)} style={{ background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer', fontSize: '18px' }}>×</button>
+        </div>
+      )}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
         <div className="page-header animate-in" style={{ margin: 0 }}>
           <h1>Dashboard</h1>

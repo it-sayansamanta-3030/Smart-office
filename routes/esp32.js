@@ -111,6 +111,20 @@ router.post('/ping', async (req, res) => {
   }
 
   // 3. Notify connected SSE clients
+  const isUnauthorized = employee.role === 'Unauthorized';
+  
+  if (isUnauthorized) {
+    const alertData = JSON.stringify({
+      type: 'alert',
+      data: {
+        message: `UNAUTHORIZED ACCESS: ${employee.name} (${employee.empId}) detected at ${roomId}!`
+      }
+    });
+    clients.forEach(client => {
+      client.write(`data: ${alertData}\n\n`);
+    });
+  }
+
   const eventData = JSON.stringify({
     type: 'ping',
     data: {
@@ -125,8 +139,8 @@ router.post('/ping', async (req, res) => {
     client.write(`data: ${eventData}\n\n`);
   });
 
-  // 4. Respond to ESP32
-  res.json({ success: true });
+  // 4. Respond to ESP32 (send authorized flag for hardware buzzers)
+  res.json({ success: true, authorized: !isUnauthorized });
 });
 
 // --- LIVE TRACKING BACKGROUND SWEEPER ---
