@@ -62,6 +62,9 @@ router.post('/ping', async (req, res) => {
         checkIn: checkInTime,
         status: isLate ? 'late' : 'on-time'
       });
+    } else if (existing.checkOut) {
+      // If they were marked out by sweeper, but pinged again, clear their checkout time!
+      await supabase.from('attendance').update({ checkOut: null }).eq('id', existing.id);
     }
   }
   // ---------------------------

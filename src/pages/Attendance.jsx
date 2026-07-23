@@ -8,9 +8,9 @@ const parseTime = (timeStr) => {
 };
 
 const formatMinutes = (mins) => {
-  if (mins < 0) return '';
+  if (mins <= 0) return '0m';
   const h = Math.floor(mins / 60);
-  const m = mins % 60;
+  const m = Math.floor(mins % 60);
   if (h > 0) return `${h}h ${m}m`;
   return `${m}m`;
 };
@@ -63,7 +63,8 @@ export default function Attendance() {
   }, [selectedDate]);
 
   const calculateWorkTime = (log) => {
-    if (!log.checkIn) return { totalMins: 0, text: '-' };
+    if (!log.checkIn) return { text: '-' };
+    
     let endMins;
     if (log.checkOut) {
       endMins = parseTime(log.checkOut);
@@ -72,33 +73,80 @@ export default function Attendance() {
       if (selectedDate === todayStr) {
         endMins = currentMins;
       } else {
-        return { totalMins: 0, text: 'Missed Check-Out' };
+        return { text: 'Missed Check-Out' };
       }
     }
-    const totalMins = Math.max(0, endMins - parseTime(log.checkIn));
-    return { totalMins, text: formatMinutes(totalMins) };
+    
+    const manualMins = Math.max(0, endMins - parseTime(log.checkIn));
+    // Use BLE realTimeMins if available and greater than 0, otherwise fallback to manual difference
+    const totalMins = (log.realTimeMins && log.realTimeMins > 0) ? log.realTimeMins : manualMins;
+    
+    return { text: formatMinutes(totalMins) };
   };
 
-  const getOvertimeStatus = (totalMins) => {
-    if (totalMins === 0) return '-';
-    const target = 8 * 60; // 480 mins
-    if (totalMins < target) {
-      return <span style={{ color: '#f39c12' }}>{formatMinutes(target - totalMins)} remaining</span>;
-    } else if (totalMins === target) {
-      return <span style={{ color: '#2ecc71' }}>Goal Reached</span>;
+  const getOvertimeStatus = (log) => {
+    if (!log.checkIn) return '-';
+    
+    let endMins;
+    if (log.checkOut) {
+      endMins = parseTime(log.checkOut);
     } else {
-      return <span style={{ color: '#3498db' }}>+{formatMinutes(totalMins - target)} Overtime</span>;
+      const todayStr = new Date().toISOString().split('T')[0];
+      if (selectedDate === todayStr) {
+        endMins = currentMins;
+      } else {
+        return '-'; // Can't compute accurate OT if missed checkout on past day
+      }
     }
+
+    const inMins = parseTime(log.checkIn);
+    const standardStart = 9 * 60; // 9:00 AM
+    const standardEnd = 17 * 60; // 5:00 PM
+
+    let ot = 0;
+    if (inMins < standardStart) {
+      ot += (standardStart - inMins);
+    }
+    if (endMins > standardEnd) {
+      ot += (endMins - standardEnd);
+    }
+
+    if (ot > 0) {
+      return <span style={{ color: '#3498db', fontWeight: 'bold' }}>+{formatMinutes(ot)} OT</span>;
+    }
+    return <span style={{ color: 'rgba(255,255,255,0.4)' }}>None</span>;
+  };
+
+  const downloadReport = () => {
+    const monthStr = selectedDate.substring(0, 7); // YYYY-MM
+    window.location.href = `${API_BASE}/attendance/export?month=${monthStr}`;
   };
 
   return (
     <div>
-      <div className="page-header animate-in" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <div className="page-header animate-in" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '15px' }}>
         <div>
           <h1>Attendance</h1>
-          <p>Monitor daily check-ins and working hours.</p>
+          <p>Monitor daily check-ins and accurate real-time working hours.</p>
         </div>
-        <div>
+        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+          <button 
+            onClick={downloadReport}
+            style={{
+              padding: '10px 15px',
+              borderRadius: '8px',
+              background: '#3498db',
+              color: 'white',
+              border: 'none',
+              cursor: 'pointer',
+              fontWeight: 'bold',
+              transition: 'background 0.2s'
+            }}
+            onMouseOver={(e) => e.target.style.background = '#2980b9'}
+            onMouseOut={(e) => e.target.style.background = '#3498db'}
+          >
+            ↓ Download Monthly Report
+          </button>
           <input 
             type="date" 
             value={selectedDate} 
@@ -125,7 +173,7 @@ export default function Attendance() {
                 <th>Status</th>
                 <th>Check In</th>
                 <th>Check Out</th>
-                <th>Work Time</th>
+                <th>Real Work Time</th>
                 <th>Overtime</th>
               </tr>
             </thead>
@@ -136,7 +184,7 @@ export default function Attendance() {
                 <tr><td colSpan="6" style={{textAlign: 'center', padding: '20px'}}>No records found.</td></tr>
               ) : (
                 logs.map((log) => {
-                  const { totalMins, text: workTimeText } = calculateWorkTime(log);
+                  const { text: workTimeText } = calculateWorkTime(log);
                   
                   return (
                     <tr key={log.employeeId}>
@@ -159,8 +207,8 @@ export default function Attendance() {
                       </td>
                       <td style={{ color: '#fff' }}>{log.checkIn || '-'}</td>
                       <td style={{ color: '#fff' }}>{log.checkOut || (log.checkIn && selectedDate === new Date().toISOString().split('T')[0] ? 'Working...' : '-')}</td>
-                      <td style={{ color: '#fff', fontWeight: 'bold' }}>{workTimeText}</td>
-                      <td>{getOvertimeStatus(totalMins)}</td>
+                      <td style={{ color: '#2ecc71', fontWeight: 'bold' }}>{workTimeText}</td>
+                      <td>{getOvertimeStatus(log)}</td>
                     </tr>
                   );
                 })
