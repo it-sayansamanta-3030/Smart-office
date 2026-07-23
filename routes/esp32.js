@@ -137,7 +137,7 @@ setInterval(async () => {
     if (error || !employees) return;
 
     const now = new Date();
-    const TIMEOUT_MS = 30000; // 30 seconds as requested
+    const TIMEOUT_MS = 65000; // 65 seconds (Accommodates standard 60s ESP32 ping rate)
 
     for (const emp of employees) {
       if (!emp.history || emp.history.length === 0) continue;

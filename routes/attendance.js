@@ -84,8 +84,8 @@ function calculateRealTimeDetails(history, targetDate) {
   
   for (let i = 1; i < pings.length; i++) {
     const ping = pings[i];
-    // If gap is less than or equal to 40 seconds (40000ms), continue session
-    if (ping - lastPing <= 40000) {
+    // If gap is less than or equal to 70 seconds (70000ms), continue session
+    if (ping - lastPing <= 70000) {
       lastPing = ping;
     } else {
       // Gap too large, close session
