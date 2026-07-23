@@ -50,15 +50,33 @@ function formatMinutes(mins) {
   return `${m}m`;
 }
 
-function calculateRealTimeMins(history, targetDate) {
-  if (!history || !Array.isArray(history) || history.length === 0) return 0;
+function getISTDateString(utcIsoString) {
+  try {
+    const d = new Date(utcIsoString);
+    const dateFmt = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kolkata', year: 'numeric', month: '2-digit', day: '2-digit' });
+    return dateFmt.format(d);
+  } catch(e) { return null; }
+}
+
+function getISTTimeString(utcIsoString) {
+  try {
+    const d = new Date(utcIsoString);
+    const timeFmt = new Intl.DateTimeFormat('en-IN', { timeZone: 'Asia/Kolkata', hour12: false, hour: '2-digit', minute: '2-digit' });
+    let t = timeFmt.format(d);
+    if (t.startsWith('24:')) t = '00:' + t.split(':')[1];
+    return t;
+  } catch(e) { return null; }
+}
+
+function calculateRealTimeDetails(history, targetDate) {
+  if (!history || !Array.isArray(history) || history.length === 0) return { mins: 0, in: null, out: null };
   
   const pings = history
-    .filter(h => h.timestamp.startsWith(targetDate))
+    .filter(h => getISTDateString(h.timestamp) === targetDate)
     .map(h => new Date(h.timestamp).getTime())
     .sort((a, b) => a - b);
     
-  if (pings.length === 0) return 0;
+  if (pings.length === 0) return { mins: 0, in: null, out: null };
   
   let totalMs = 0;
   let currentSessionStart = pings[0];
@@ -80,9 +98,13 @@ function calculateRealTimeMins(history, targetDate) {
   totalMs += (lastPing - currentSessionStart);
   
   // If there's only 1 ping or very short, give it at least 1 minute if they checked in
-  if (totalMs === 0 && pings.length > 0) return 1;
+  if (totalMs === 0 && pings.length > 0) totalMs = 60000;
   
-  return Math.round(totalMs / 60000);
+  const mins = Math.round(totalMs / 60000);
+  const firstIn = getISTTimeString(new Date(pings[0]).toISOString());
+  const lastOut = getISTTimeString(new Date(pings[pings.length - 1]).toISOString());
+  
+  return { mins, in: firstIn, out: lastOut };
 }
 
 // GET /api/attendance/export?month=YYYY-MM — export CSV
@@ -117,10 +139,12 @@ router.get('/export', async (req, res) => {
     dates.forEach(date => {
       const record = recordsByEmpAndDate[emp.id]?.[date];
       if (record) {
-        const realTimeMins = calculateRealTimeMins(emp.history, date);
-        const otMins = calculateOvertimeMins(record.checkIn, record.checkOut);
+        const details = calculateRealTimeDetails(emp.history, date);
+        const actualCheckIn = details.in || record.checkIn;
+        const actualCheckOut = details.out || record.checkOut;
+        const otMins = calculateOvertimeMins(actualCheckIn, actualCheckOut);
         
-        csvContent += `${emp.empId},"${emp.name}",${date},${record.status},${record.checkIn || '-'},${record.checkOut || '-'},"${formatMinutes(realTimeMins)}","${formatMinutes(otMins)}"\n`;
+        csvContent += `${emp.empId},"${emp.name}",${date},${record.status},${actualCheckIn || '-'},${actualCheckOut || '-'},"${formatMinutes(details.mins)}","${formatMinutes(otMins)}"\n`;
       } else {
         // Assume absent if no record for a date where others have records
         csvContent += `${emp.empId},"${emp.name}",${date},Absent,-,-,0m,0m\n`;
@@ -150,7 +174,22 @@ router.get('/', async (req, res) => {
   // Merge them
   const enriched = employees.map(emp => {
     const record = attendance.find(a => a.employeeId === emp.id);
-    const realTimeMins = calculateRealTimeMins(emp.history, targetDate);
+    const details = calculateRealTimeDetails(emp.history, targetDate);
+    
+    let checkIn = details.in || (record ? record.checkIn : null);
+    
+    // Determine checkOut
+    let checkOut = null;
+    if (details.out) {
+      checkOut = details.out;
+      // If they are currently 'In' and checking today's attendance, they are still working
+      if (emp.status === 'In' && targetDate === todayStr()) {
+        checkOut = null;
+      }
+    } else if (record) {
+      checkOut = record.checkOut;
+    }
+
     return {
       employeeId: emp.id,
       employeeName: emp.name,
@@ -158,10 +197,10 @@ router.get('/', async (req, res) => {
       empIdStr: emp.empId,
       date: targetDate,
       status: record ? record.status : 'Absent',
-      checkIn: record ? record.checkIn : null,
-      checkOut: record ? record.checkOut : null,
+      checkIn: checkIn,
+      checkOut: checkOut,
       recordId: record ? record.id : null,
-      realTimeMins: realTimeMins
+      realTimeMins: details.mins
     };
   });
 

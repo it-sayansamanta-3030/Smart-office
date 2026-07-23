@@ -170,7 +170,6 @@ export default function Attendance() {
             <thead>
               <tr>
                 <th>Employee</th>
-                <th>Status</th>
                 <th>Check In</th>
                 <th>Check Out</th>
                 <th>Real Work Time</th>
@@ -198,12 +197,6 @@ export default function Attendance() {
                             <div className="stat-label">{log.employeeRole || 'Employee'}</div>
                           </div>
                         </div>
-                      </td>
-                      <td>
-                        <span className={`badge ${log.status.toLowerCase() === 'absent' ? 'absent' : log.status.replace('_', '-')}`} 
-                              style={log.status.toLowerCase() === 'absent' ? { background: 'rgba(231, 76, 60, 0.1)', color: '#e74c3c' } : {}}>
-                          {log.status.replace('_', ' ').toUpperCase()}
-                        </span>
                       </td>
                       <td style={{ color: '#fff' }}>{log.checkIn || '-'}</td>
                       <td style={{ color: '#fff' }}>{log.checkOut || (log.checkIn && selectedDate === new Date().toISOString().split('T')[0] ? 'Working...' : '-')}</td>
