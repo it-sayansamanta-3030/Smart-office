@@ -133,7 +133,7 @@ router.get('/export', async (req, res) => {
   attendance.forEach(a => dates.add(a.date));
   dates = Array.from(dates).sort();
 
-  let csvContent = 'Employee ID,Name,Date,Status,Time In,Time Out,Real Work Time,Overtime\n';
+  let csvContent = 'Employee ID,Name,Date,Time In,Time Out,Real Work Time,Overtime\n';
   
   employees.forEach(emp => {
     dates.forEach(date => {
@@ -144,10 +144,10 @@ router.get('/export', async (req, res) => {
         const actualCheckOut = details.out || record.checkOut;
         const otMins = calculateOvertimeMins(actualCheckIn, actualCheckOut);
         
-        csvContent += `${emp.empId},"${emp.name}",${date},${record.status},${actualCheckIn || '-'},${actualCheckOut || '-'},"${formatMinutes(details.mins)}","${formatMinutes(otMins)}"\n`;
+        csvContent += `${emp.empId},"${emp.name}",${date},${actualCheckIn || '-'},${actualCheckOut || '-'},"${formatMinutes(details.mins)}","${formatMinutes(otMins)}"\n`;
       } else {
         // Assume absent if no record for a date where others have records
-        csvContent += `${emp.empId},"${emp.name}",${date},Absent,-,-,0m,0m\n`;
+        csvContent += `${emp.empId},"${emp.name}",${date},-,-,0m,0m\n`;
       }
     });
   });
