@@ -15,12 +15,12 @@ export default function App() {
 
   // Check auth state on load
   useEffect(() => {
-    const auth = localStorage.getItem('auth');
+    const auth = localStorage.getItem('admin_office_auth');
     if (auth === 'true') setIsAuthenticated(true);
   }, []);
 
   const handleLogin = () => {
-    localStorage.setItem('auth', 'true');
+    localStorage.setItem('admin_office_auth', 'true');
     setIsAuthenticated(true);
   };
 
