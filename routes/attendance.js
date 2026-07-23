@@ -183,7 +183,7 @@ router.get('/', async (req, res) => {
     if (details.out) {
       checkOut = details.out;
       // If they are currently 'In' and checking today's attendance, they are still working
-      if (emp.status === 'In' && targetDate === todayStr()) {
+      if (emp.currentRoom && targetDate === todayStr()) {
         checkOut = null;
       }
     } else if (record) {
