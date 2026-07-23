@@ -137,7 +137,7 @@ setInterval(async () => {
     if (error || !employees) return;
 
     const now = new Date();
-    const TIMEOUT_MS = 65000; // 65 seconds (Accommodates standard 60s ESP32 ping rate)
+    const TIMEOUT_MS = 25000; // 25 seconds as requested based on 8s hardware ping
 
     for (const emp of employees) {
       if (!emp.history || emp.history.length === 0) continue;
@@ -184,6 +184,6 @@ setInterval(async () => {
   } catch (err) {
     console.error('[Sweeper Error]', err);
   }
-}, 10000);
+}, 5000);
 
 module.exports = router;

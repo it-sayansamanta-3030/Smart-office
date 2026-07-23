@@ -81,10 +81,10 @@ export default function Dashboard() {
       // If they changed rooms, the previous event isn't part of this session
       if (currentEvent.room !== prevEvent.room) break;
       
-      // If there was a gap of more than 70 seconds, they left and came back (70s prevents random resets from network jitter)
+      // If there was a gap of more than 30 seconds, they left and came back (30s prevents random resets from network jitter on 8s pings)
       const currTime = new Date(currentEvent.timestamp).getTime();
       const prevTime = new Date(prevEvent.timestamp).getTime();
-      if (currTime - prevTime > 70000) break;
+      if (currTime - prevTime > 30000) break;
       
       // Otherwise, the session started at least as early as the previous event
       entryTime = new Date(prevEvent.timestamp);
@@ -133,7 +133,7 @@ export default function Dashboard() {
     for (let i = 1; i < todayPings.length; i++) {
         const ping = todayPings[i];
         
-        if (ping.room === currentRoom && (ping.time - lastPing <= 70000)) {
+        if (ping.room === currentRoom && (ping.time - lastPing <= 30000)) {
             lastPing = ping.time;
         } else {
             // session closed or room changed
