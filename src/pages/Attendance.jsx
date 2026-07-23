@@ -119,7 +119,7 @@ export default function Attendance() {
 
   const downloadReport = () => {
     const monthStr = selectedDate.substring(0, 7); // YYYY-MM
-    window.location.href = `${API_BASE}/attendance/export?month=${monthStr}`;
+    window.location.href = `${API_BASE}/attendance/export?month=${monthStr}&t=${Date.now()}`;
   };
 
   return (
