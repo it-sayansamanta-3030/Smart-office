@@ -83,7 +83,8 @@ router.get('/export', async (req, res) => {
   
   const { data: attendance, error: attErr } = await supabase.from('attendance')
     .select('*')
-    .like('date', `${month}-%`);
+    .gte('date', `${month}-01`)
+    .lte('date', `${month}-31`);
   if (attErr) return res.status(500).json({ status: 'error', message: attErr.message });
 
   // Group attendance by employee and date
