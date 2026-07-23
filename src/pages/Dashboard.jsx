@@ -54,7 +54,6 @@ export default function Dashboard() {
         }
         if (data.type === 'alert') {
           setUnauthorizedAlert(data.data.message);
-          setTimeout(() => setUnauthorizedAlert(null), 10000); // Clear after 10s
         }
       } catch (e) {}
     };
