@@ -124,7 +124,7 @@ router.post('/ping', async (req, res) => {
 });
 
 // --- LIVE TRACKING BACKGROUND SWEEPER ---
-// Runs every 10 seconds to check for timed-out employees
+// Runs every 2 seconds to aggressively check for timed-out employees
 setInterval(async () => {
   try {
     // 1. Fetch all employees currently 'In' a room
@@ -184,6 +184,6 @@ setInterval(async () => {
   } catch (err) {
     console.error('[Sweeper Error]', err);
   }
-}, 5000);
+}, 2000);
 
 module.exports = router;

@@ -359,7 +359,6 @@ export default function Dashboard() {
                 <th>Employee</th>
                 <th>Status</th>
                 <th>Current Location</th>
-                <th>Time in Room</th>
                 <th>Total Hours</th>
                 <th>Actions</th>
               </tr>
@@ -388,7 +387,6 @@ export default function Dashboard() {
                     </div>
                   </td>
                   <td style={{ color: '#e2e8f0' }}>{emp.currentRoom || '-'}</td>
-                  <td style={{ color: '#94a3b8' }}>{formatLiveTime(emp)}</td>
                   <td>
                     <div style={{ color: '#10b981', fontWeight: 600 }}>{formatMinutesStr(stats.totalMs) || '-'}</div>
                     {roomEntries.length > 0 && (
