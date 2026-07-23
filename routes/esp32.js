@@ -137,7 +137,7 @@ setInterval(async () => {
     if (error || !employees) return;
 
     const now = new Date();
-    const TIMEOUT_MS = 45000; // Reverted back to 45s to avoid false disconnects
+    const TIMEOUT_MS = 30000; // 30 seconds as requested
 
     for (const emp of employees) {
       if (!emp.history || emp.history.length === 0) continue;
