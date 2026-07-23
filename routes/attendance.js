@@ -2,8 +2,20 @@ const express = require('express');
 const router = express.Router();
 const supabase = require('../data/supabase');
 
+function getIST() {
+  const now = new Date();
+  const dateFmt = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kolkata', year: 'numeric', month: '2-digit', day: '2-digit' });
+  const timeFmt = new Intl.DateTimeFormat('en-IN', { timeZone: 'Asia/Kolkata', hour12: false, hour: '2-digit', minute: '2-digit' });
+  const todayStr = dateFmt.format(now);
+  let timeStr = timeFmt.format(now);
+  if (timeStr.startsWith('24:')) timeStr = '00:' + timeStr.split(':')[1];
+  const hour = parseInt(timeStr.split(':')[0], 10);
+  const min = parseInt(timeStr.split(':')[1], 10);
+  return { todayStr, timeStr, hour, min };
+}
+
 function todayStr() {
-  return new Date().toISOString().split('T')[0];
+  return getIST().todayStr;
 }
 
 function parseTime(timeStr) {
@@ -171,9 +183,8 @@ router.post('/checkin', async (req, res) => {
     return res.status(409).json({ status: 'error', message: 'Already checked in today' });
   }
 
-  const now = new Date();
-  const checkInTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-  const isLate = now.getHours() > 9 || (now.getHours() === 9 && now.getMinutes() > 15);
+  const { timeStr, hour, min } = getIST();
+  const isLate = hour > 9 || (hour === 9 && min > 15);
 
   // Get max ID
   const { data: maxIdRecord } = await supabase.from('attendance').select('id').order('id', { ascending: false }).limit(1).maybeSingle();
@@ -184,7 +195,7 @@ router.post('/checkin', async (req, res) => {
       id: nextId,
       employeeId: parseInt(employeeId),
       date: today,
-      checkIn: checkInTime,
+      checkIn: timeStr,
       status: isLate ? 'late' : 'on-time'
     })
     .select('*, employee:employees(*)')
@@ -217,11 +228,10 @@ router.post('/checkout', async (req, res) => {
   if (!record) return res.status(404).json({ status: 'error', message: 'No check-in found for today' });
   if (record.checkOut) return res.status(409).json({ status: 'error', message: 'Already checked out today' });
 
-  const now = new Date();
-  const checkOutTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+  const { timeStr } = getIST();
 
   const { data: updated, error } = await supabase.from('attendance')
-    .update({ checkOut: checkOutTime })
+    .update({ checkOut: timeStr })
     .eq('id', record.id)
     .select('*, employee:employees(*)')
     .single();

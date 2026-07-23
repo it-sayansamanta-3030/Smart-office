@@ -2,6 +2,17 @@ const express = require('express');
 const router = express.Router();
 const supabase = require('../data/supabase');
 
+function getIST() {
+  const now = new Date();
+  const dateFmt = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kolkata', year: 'numeric', month: '2-digit', day: '2-digit' });
+  const timeFmt = new Intl.DateTimeFormat('en-IN', { timeZone: 'Asia/Kolkata', hour12: false, hour: '2-digit', minute: '2-digit' });
+  const todayStr = dateFmt.format(now);
+  let timeStr = timeFmt.format(now);
+  if (timeStr.startsWith('24:')) timeStr = '00:' + timeStr.split(':')[1];
+  const hour = parseInt(timeStr.split(':')[0], 10);
+  const min = parseInt(timeStr.split(':')[1], 10);
+  return { todayStr, timeStr, hour, min };
+}
 // Store active SSE clients
 let clients = [];
 
@@ -43,14 +54,12 @@ router.post('/ping', async (req, res) => {
 
   // --- AUTO CHECK-IN LOGIC ---
   if (employee.status !== 'In') {
-    const today = new Date().toISOString().split('T')[0];
+    const { todayStr, timeStr, hour, min } = getIST();
     const { data: existing } = await supabase.from('attendance')
-      .select('*').eq('employeeId', employee.id).eq('date', today).maybeSingle();
+      .select('*').eq('employeeId', employee.id).eq('date', todayStr).maybeSingle();
       
     if (!existing) {
-      const now = new Date();
-      const checkInTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-      const isLate = now.getHours() > 9 || (now.getHours() === 9 && now.getMinutes() > 15);
+      const isLate = hour > 9 || (hour === 9 && min > 15);
       
       const { data: maxIdRecord } = await supabase.from('attendance').select('id').order('id', { ascending: false }).limit(1).maybeSingle();
       const nextId = (maxIdRecord ? maxIdRecord.id : 0) + 1;
@@ -58,8 +67,8 @@ router.post('/ping', async (req, res) => {
       await supabase.from('attendance').insert({
         id: nextId,
         employeeId: employee.id,
-        date: today,
-        checkIn: checkInTime,
+        date: todayStr,
+        checkIn: timeStr,
         status: isLate ? 'late' : 'on-time'
       });
     } else if (existing.checkOut) {
@@ -145,14 +154,12 @@ setInterval(async () => {
           .eq('id', emp.id);
 
         // --- AUTO CHECK-OUT LOGIC ---
-        const todayStr = new Date().toISOString().split('T')[0];
+        const { todayStr: outDate, timeStr: outTime } = getIST();
         const { data: record } = await supabase.from('attendance')
-          .select('*').eq('employeeId', emp.id).eq('date', todayStr).maybeSingle();
+          .select('*').eq('employeeId', emp.id).eq('date', outDate).maybeSingle();
           
         if (record) {
-           const outNow = new Date();
-           const checkOutTime = `${String(outNow.getHours()).padStart(2, '0')}:${String(outNow.getMinutes()).padStart(2, '0')}`;
-           await supabase.from('attendance').update({ checkOut: checkOutTime }).eq('id', record.id);
+           await supabase.from('attendance').update({ checkOut: outTime }).eq('id', record.id);
         }
         // ----------------------------
 
