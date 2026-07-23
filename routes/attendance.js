@@ -101,8 +101,8 @@ function calculateRealTimeDetails(history, targetDate) {
   if (totalMs === 0 && pings.length > 0) totalMs = 60000;
   
   const mins = Math.round(totalMs / 60000);
-  const firstIn = getISTTimeString(new Date(pings[0]).toISOString());
-  const lastOut = getISTTimeString(new Date(pings[pings.length - 1]).toISOString());
+  const firstIn = getISTTimeString(new Date(currentSessionStart).toISOString());
+  const lastOut = getISTTimeString(new Date(lastPing).toISOString());
   
   return { mins, in: firstIn, out: lastOut };
 }
