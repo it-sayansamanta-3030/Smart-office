@@ -69,10 +69,10 @@ export default function Dashboard() {
       // If they changed rooms, the previous event isn't part of this session
       if (currentEvent.room !== prevEvent.room) break;
       
-      // If there was a gap of more than 60 seconds, they left and came back
+      // If there was a gap of more than 70 seconds, they left and came back (70s prevents random resets from network jitter)
       const currTime = new Date(currentEvent.timestamp).getTime();
       const prevTime = new Date(prevEvent.timestamp).getTime();
-      if (currTime - prevTime > 60000) break;
+      if (currTime - prevTime > 70000) break;
       
       // Otherwise, the session started at least as early as the previous event
       entryTime = new Date(prevEvent.timestamp);
@@ -87,6 +87,75 @@ export default function Dashboard() {
     if (hrs > 0) return `${hrs}h ${mins}m ${secs}s`;
     if (mins > 0) return `${mins}m ${secs}s`;
     return `${secs}s`;
+  };
+
+  const formatMinutesStr = (totalMs) => {
+    if (totalMs <= 0) return '0m';
+    const mins = Math.round(totalMs / 60000);
+    const h = Math.floor(mins / 60);
+    const m = Math.floor(mins % 60);
+    if (h > 0) return `${h}h ${m}m`;
+    return `${m}m`;
+  };
+
+  const calculateDailyStats = (emp) => {
+    if (!emp.history || !Array.isArray(emp.history) || emp.history.length === 0) return { totalMs: 0, rooms: {} };
+    
+    const today = new Date().toLocaleDateString('en-CA');
+    
+    const todayPings = emp.history.filter(h => {
+        try {
+            return new Date(h.timestamp).toLocaleDateString('en-CA') === today;
+        } catch(e) { return false; }
+    }).map(h => ({ ...h, time: new Date(h.timestamp).getTime() })).sort((a,b) => a.time - b.time);
+    
+    if (todayPings.length === 0) return { totalMs: 0, rooms: {} };
+
+    let totalMs = 0;
+    const rooms = {};
+    
+    let currentSessionStart = todayPings[0].time;
+    let lastPing = todayPings[0].time;
+    let currentRoom = todayPings[0].room;
+    
+    for (let i = 1; i < todayPings.length; i++) {
+        const ping = todayPings[i];
+        
+        if (ping.room === currentRoom && (ping.time - lastPing <= 70000)) {
+            lastPing = ping.time;
+        } else {
+            // session closed or room changed
+            const duration = (lastPing - currentSessionStart);
+            totalMs += duration;
+            if (!rooms[currentRoom]) rooms[currentRoom] = 0;
+            rooms[currentRoom] += duration;
+            
+            currentSessionStart = ping.time;
+            lastPing = ping.time;
+            currentRoom = ping.room;
+        }
+    }
+    
+    // Add last session
+    const duration = (lastPing - currentSessionStart);
+    totalMs += duration;
+    if (!rooms[currentRoom]) rooms[currentRoom] = 0;
+    rooms[currentRoom] += duration;
+    
+    // Add live time if still in room
+    if (emp.status === 'In' && (currentTime.getTime() - lastPing) < 120000) {
+        const liveDuration = (currentTime.getTime() - lastPing);
+        totalMs += liveDuration;
+        if (!rooms[currentRoom]) rooms[currentRoom] = 0;
+        rooms[currentRoom] += liveDuration;
+    }
+
+    if (totalMs === 0 && todayPings.length > 0) {
+        totalMs = 60000;
+        rooms[currentRoom] = 60000;
+    }
+
+    return { totalMs, rooms };
   };
 
   const handleOpenModal = (emp = null) => {
@@ -294,7 +363,10 @@ export default function Dashboard() {
               </tr>
             </thead>
             <tbody>
-              {filteredEmployees.map(emp => (
+              {filteredEmployees.map(emp => {
+                const stats = calculateDailyStats(emp);
+                const roomEntries = Object.entries(stats.rooms);
+                return (
                 <tr key={emp.id}>
                   <td>
                     <div className="employee-row">
@@ -315,7 +387,16 @@ export default function Dashboard() {
                   </td>
                   <td style={{ color: '#e2e8f0' }}>{emp.currentRoom || '-'}</td>
                   <td style={{ color: '#94a3b8' }}>{formatLiveTime(emp)}</td>
-                  <td style={{ color: '#94a3b8' }}>-</td>
+                  <td>
+                    <div style={{ color: '#10b981', fontWeight: 600 }}>{formatMinutesStr(stats.totalMs) || '-'}</div>
+                    {roomEntries.length > 0 && (
+                      <div style={{ fontSize: '11px', color: '#64748b', marginTop: '4px', maxWidth: '200px' }}>
+                        {roomEntries.map(([room, ms], idx) => (
+                           <span key={room}>{room}: {formatMinutesStr(ms)}{idx < roomEntries.length - 1 ? ' | ' : ''}</span>
+                        ))}
+                      </div>
+                    )}
+                  </td>
                   <td>
                     <div style={{ display: 'flex', gap: '8px' }}>
                       <button onClick={() => handleOpenModal(emp)} style={{ background: 'transparent', border: 'none', color: '#94a3b8', cursor: 'pointer' }}><Edit size={16} /></button>
@@ -323,7 +404,7 @@ export default function Dashboard() {
                     </div>
                   </td>
                 </tr>
-              ))}
+              )})}
               {filteredEmployees.length === 0 && (
                 <tr>
                   <td colSpan="6" style={{ textAlign: 'center', padding: '24px', color: '#64748b' }}>No employees found.</td>
