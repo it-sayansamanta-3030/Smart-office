@@ -32,9 +32,21 @@ export default function Dashboard() {
     fetchEmployees();
     
     const source = new EventSource(`${API_BASE}/esp32/stream`);
+    
+    source.onopen = () => {
+      setEspConnected(true);
+    };
+    
+    source.onerror = () => {
+      setEspConnected(false);
+    };
+    
     source.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
+        if (data.type === 'connected') {
+          setEspConnected(true);
+        }
         if (data.type === 'ping' || data.type === 'timeout') {
           // Re-fetch to get updated state
           fetchEmployees();
@@ -69,10 +81,10 @@ export default function Dashboard() {
       // If they changed rooms, the previous event isn't part of this session
       if (currentEvent.room !== prevEvent.room) break;
       
-      // If there was a gap of more than 25 seconds, they left and came back (25s prevents random resets from network jitter on a 15s ping)
+      // If there was a gap of more than 70 seconds, they left and came back (70s prevents random resets from network jitter)
       const currTime = new Date(currentEvent.timestamp).getTime();
       const prevTime = new Date(prevEvent.timestamp).getTime();
-      if (currTime - prevTime > 25000) break;
+      if (currTime - prevTime > 70000) break;
       
       // Otherwise, the session started at least as early as the previous event
       entryTime = new Date(prevEvent.timestamp);
@@ -121,7 +133,7 @@ export default function Dashboard() {
     for (let i = 1; i < todayPings.length; i++) {
         const ping = todayPings[i];
         
-        if (ping.room === currentRoom && (ping.time - lastPing <= 25000)) {
+        if (ping.room === currentRoom && (ping.time - lastPing <= 70000)) {
             lastPing = ping.time;
         } else {
             // session closed or room changed
@@ -254,17 +266,7 @@ export default function Dashboard() {
             <span style={{ color: '#94a3b8', fontSize: '14px', marginLeft: '6px' }}>Present</span>
           </div>
 
-          <button 
-            onClick={() => setEspConnected(!espConnected)}
-            style={{ 
-              display: 'flex', alignItems: 'center', gap: '8px', 
-              padding: '8px 16px', borderRadius: '8px', 
-              backgroundColor: '#1e293b', color: '#e2e8f0', 
-              border: '1px solid #334155', cursor: 'pointer' 
-            }}
-          >
-            <Wifi size={16} /> Connect ESP32
-          </button>
+
 
           <button 
             onClick={() => handleOpenModal()}
