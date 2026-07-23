@@ -5,11 +5,24 @@ import Dashboard from './pages/Dashboard';
 import Attendance from './pages/Attendance';
 import Tasks from './pages/Tasks';
 import EmergencyMode from './pages/EmergencyMode';
+import Login from './pages/Login';
 import { ShieldAlert, X } from 'lucide-react';
 import { API_BASE } from './api';
 
 export default function App() {
   const [toast, setToast] = useState(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  // Check auth state on load
+  useEffect(() => {
+    const auth = localStorage.getItem('auth');
+    if (auth === 'true') setIsAuthenticated(true);
+  }, []);
+
+  const handleLogin = () => {
+    localStorage.setItem('auth', 'true');
+    setIsAuthenticated(true);
+  };
 
   useEffect(() => {
     // Connect to SSE stream for real-time ESP32 ping alerts
@@ -30,6 +43,10 @@ export default function App() {
 
     return () => source.close();
   }, []);
+
+  if (!isAuthenticated) {
+    return <Login onLogin={handleLogin} />;
+  }
 
   return (
     <div className="app-layout bg-bgPrimary relative">

@@ -55,13 +55,23 @@ export default function EmergencyMode() {
   });
 
   return (
-    <div>
-      <div className="page-header animate-in" style={{ borderLeft: '4px solid #ef4444', paddingLeft: '16px' }}>
-        <h1 style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#ef4444' }}>
-          <ShieldAlert size={32} />
-          Emergency Mode
-        </h1>
-        <p>Real-time headcount and location tracking.</p>
+    <div style={{ animation: 'fadeIn 0.5s ease-out' }}>
+      <div style={{ 
+        display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '32px',
+        padding: '24px', borderRadius: '16px',
+        background: 'linear-gradient(90deg, rgba(239, 68, 68, 0.15) 0%, rgba(239, 68, 68, 0.05) 100%)',
+        borderLeft: '4px solid #ef4444',
+        border: '1px solid rgba(239, 68, 68, 0.2)'
+      }}>
+        <div style={{ animation: 'pulse 2s infinite' }}>
+          <ShieldAlert size={40} color="#ef4444" />
+        </div>
+        <div>
+          <h1 style={{ color: '#fff', fontSize: '28px', fontWeight: '800', margin: '0 0 4px 0', letterSpacing: '-0.5px' }}>
+            Emergency Command Center
+          </h1>
+          <p style={{ color: '#fca5a5', margin: 0, fontSize: '15px' }}>Real-time evacuation & headcount tracking active.</p>
+        </div>
       </div>
 
       <div className="stats-grid" style={{ marginBottom: '24px' }}>
@@ -104,10 +114,26 @@ export default function EmergencyMode() {
 
       <div className="content-grid">
         {validRooms.map(room => (
-          <div key={room} className="glass-card animate-in">
-            <div className="chart-card-header" style={{ borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '16px', marginBottom: '16px' }}>
-              <h3 className="chart-card-title">{room}</h3>
-              <p className="chart-card-subtitle">Headcount: {groupedByRoom[room].length}</p>
+          <div key={room} style={{ 
+            backgroundColor: 'rgba(15, 23, 42, 0.6)', 
+            backdropFilter: 'blur(12px)',
+            borderRadius: '16px',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            padding: '24px',
+            boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255,255,255,0.02)'
+          }}>
+            <div style={{ 
+              borderBottom: '1px solid rgba(255,255,255,0.1)', 
+              paddingBottom: '16px', marginBottom: '20px',
+              display: 'flex', justifyContent: 'space-between', alignItems: 'center'
+            }}>
+              <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 600, color: '#fff' }}>{room}</h3>
+              <span style={{ 
+                backgroundColor: 'rgba(59, 130, 246, 0.2)', color: '#60a5fa', 
+                padding: '4px 12px', borderRadius: '20px', fontSize: '13px', fontWeight: 600 
+              }}>
+                {groupedByRoom[room].length} Personnel
+              </span>
             </div>
             
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
@@ -115,13 +141,27 @@ export default function EmergencyMode() {
                 <p style={{ color: '#94a3b8', fontStyle: 'italic' }}>No one detected in this room.</p>
               ) : (
                 groupedByRoom[room].map(emp => (
-                  <div key={emp.empId || emp.id} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', backgroundColor: 'rgba(255,255,255,0.03)', borderRadius: '8px' }}>
-                    <div style={{ width: '40px', height: '40px', borderRadius: '20px', backgroundColor: '#334155', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 600, color: '#e2e8f0' }}>
+                  <div key={emp.empId || emp.id} style={{ 
+                    display: 'flex', alignItems: 'center', gap: '16px', padding: '16px', 
+                    backgroundColor: 'rgba(255,255,255,0.03)', borderRadius: '12px',
+                    border: '1px solid rgba(255,255,255,0.05)',
+                    transition: 'all 0.2s ease'
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.06)'}
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.03)'}
+                  >
+                    <div style={{ 
+                      width: '44px', height: '44px', borderRadius: '12px', 
+                      background: 'linear-gradient(135deg, #334155 0%, #1e293b 100%)', 
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', 
+                      fontWeight: 600, color: '#e2e8f0', boxShadow: '0 4px 6px rgba(0,0,0,0.3)',
+                      border: '1px solid rgba(255,255,255,0.1)'
+                    }}>
                       {emp.avatar || (emp.name ? emp.name.substring(0, 2).toUpperCase() : '??')}
                     </div>
                     <div>
-                      <h4 style={{ color: '#e2e8f0', fontWeight: 500 }}>{emp.name}</h4>
-                      <p style={{ color: '#94a3b8', fontSize: '13px' }}>ID: {emp.empId || `N/A`} • Dept: {emp.department}</p>
+                      <h4 style={{ color: '#fff', fontWeight: 600, margin: '0 0 4px 0', fontSize: '15px' }}>{emp.name}</h4>
+                      <p style={{ color: '#94a3b8', margin: 0, fontSize: '13px' }}>ID: <span style={{ color: '#e2e8f0' }}>{emp.empId || `N/A`}</span> • Role: <span style={{ color: '#e2e8f0' }}>{emp.role || 'Employee'}</span></p>
                     </div>
                   </div>
                 ))
