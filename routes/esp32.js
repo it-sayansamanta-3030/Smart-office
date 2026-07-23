@@ -137,7 +137,7 @@ setInterval(async () => {
     if (error || !employees) return;
 
     const now = new Date();
-    const TIMEOUT_MS = 45000; // 45 seconds (increased from 30s to be solid proof)
+    const TIMEOUT_MS = 15000; // 15 seconds as requested
 
     for (const emp of employees) {
       if (!emp.history || emp.history.length === 0) continue;
@@ -184,6 +184,6 @@ setInterval(async () => {
   } catch (err) {
     console.error('[Sweeper Error]', err);
   }
-}, 10000);
+}, 5000);
 
 module.exports = router;
