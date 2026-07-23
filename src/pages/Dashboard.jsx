@@ -16,7 +16,6 @@ export default function Dashboard() {
   // ESP32 Connection state (mock)
   const [espConnected, setEspConnected] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
-  const [unauthorizedAlert, setUnauthorizedAlert] = useState(null);
 
   const fetchEmployees = async () => {
     try {
@@ -51,9 +50,6 @@ export default function Dashboard() {
         if (data.type === 'ping' || data.type === 'timeout') {
           // Re-fetch to get updated state
           fetchEmployees();
-        }
-        if (data.type === 'alert') {
-          setUnauthorizedAlert(data.data.message);
         }
       } catch (e) {}
     };
@@ -106,12 +102,15 @@ export default function Dashboard() {
   };
 
   const formatMinutesStr = (totalMs) => {
-    if (totalMs <= 0) return '0m';
-    const mins = Math.round(totalMs / 60000);
-    const h = Math.floor(mins / 60);
-    const m = Math.floor(mins % 60);
-    if (h > 0) return `${h}h ${m}m`;
-    return `${m}m`;
+    if (totalMs <= 0) return '0s';
+    const totalSecs = Math.floor(totalMs / 1000);
+    const hrs = Math.floor(totalSecs / 3600);
+    const mins = Math.floor((totalSecs % 3600) / 60);
+    const secs = totalSecs % 60;
+    
+    if (hrs > 0) return `${hrs}h ${mins}m ${secs}s`;
+    if (mins > 0) return `${mins}m ${secs}s`;
+    return `${secs}s`;
   };
 
   const calculateDailyStats = (emp) => {
@@ -244,25 +243,23 @@ export default function Dashboard() {
 
   if (loading) return <div className="p-8">Loading dashboard...</div>;
 
+  // Compute if there's any unauthorized person in the building right now
+  const unauthorizedEmployeesInBuilding = employees.filter(emp => emp.role === 'Unauthorized' && emp.status === 'In');
+
   return (
-    <div style={{ position: 'relative' }}>
-      {/* Header */}
-      {unauthorizedAlert && (
-        <div style={{
-          backgroundColor: '#ef4444',
-          color: '#fff',
-          padding: '16px',
-          borderRadius: '8px',
-          marginBottom: '24px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          fontWeight: 'bold',
-          boxShadow: '0 4px 6px -1px rgba(239, 68, 68, 0.4)',
-          animation: 'pulse 2s infinite'
-        }}>
-          <span>⚠️ {unauthorizedAlert}</span>
-          <button onClick={() => setUnauthorizedAlert(null)} style={{ background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer', fontSize: '18px' }}>×</button>
+    <div className="dashboard-content">
+      {/* Dynamic Unauthorized Banner that stays permanently as long as the person is in the building */}
+      {unauthorizedEmployeesInBuilding.length > 0 && (
+        <div style={{ backgroundColor: '#ef4444', color: 'white', padding: '16px', borderRadius: '12px', marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: '0 4px 12px rgba(239, 68, 68, 0.3)', animation: 'pulse 2s infinite' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <span style={{ fontSize: '24px' }}>⚠️</span>
+            <div>
+              <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 'bold' }}>UNAUTHORIZED ACCESS DETECTED</h3>
+              <p style={{ margin: 0, opacity: 0.9 }}>
+                {unauthorizedEmployeesInBuilding.map(e => `${e.name} (${e.empId}) is currently at ${e.currentRoom}`).join(', ')}
+              </p>
+            </div>
+          </div>
         </div>
       )}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
