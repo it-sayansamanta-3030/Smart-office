@@ -227,7 +227,7 @@ input, select, textarea {
   font-family: inherit;
   font-size: 0.9rem;
   color: inherit;
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--bg-surface);
   border: 1px solid var(--border-medium);
   border-radius: var(--radius-md);
   padding: 10px 14px;
@@ -238,7 +238,7 @@ input, select, textarea {
 input:focus, select:focus, textarea:focus {
   outline: none;
   border-color: var(--accent-primary);
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--bg-surface-active);
   box-shadow: 0 0 0 3px var(--accent-primary-glow), inset 0 2px 4px rgba(0,0,0,0.2);
 }
 
@@ -280,9 +280,7 @@ input:focus, select:focus, textarea:focus {
   font-weight: 800;
   letter-spacing: -0.03em;
   margin-bottom: var(--space-xs);
-  background: linear-gradient(180deg, var(--text-primary), var(--text-secondary));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color: var(--text-primary);
 }
 
 .page-header p {
@@ -298,7 +296,7 @@ input:focus, select:focus, textarea:focus {
   left: 0;
   width: var(--sidebar-width);
   height: 100vh;
-  background: rgba(11, 15, 25, 0.6);
+  background: var(--bg-secondary);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border-right: 1px solid var(--border-subtle);
@@ -333,7 +331,7 @@ input:focus, select:focus, textarea:focus {
   font-weight: 800;
   letter-spacing: -0.01em;
   line-height: 1.1;
-  color: #fff;
+  color: var(--text-primary);
 }
 
 .sidebar-brand span {
@@ -369,12 +367,12 @@ input:focus, select:focus, textarea:focus {
 
 .sidebar-link:hover {
   color: var(--text-primary);
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--bg-surface-hover);
 }
 
 .sidebar-link.active {
-  color: #fff;
-  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-primary);
+  background: var(--bg-surface-active);
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1);
 }
 
@@ -471,8 +469,8 @@ input:focus, select:focus, textarea:focus {
 
 /* ---- Premium Glass Card ---- */
 .glass-card {
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
   border-radius: var(--radius-xl);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
@@ -620,7 +618,7 @@ input:focus, select:focus, textarea:focus {
   letter-spacing: 0.05em;
   color: var(--text-secondary);
   border-bottom: 1px solid var(--border-medium);
-  background: rgba(0,0,0,0.2);
+  background: var(--bg-surface-active);
 }
 
 .data-table tbody td {
@@ -634,7 +632,7 @@ input:focus, select:focus, textarea:focus {
 }
 
 .data-table tbody tr:hover {
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--bg-surface-hover);
 }
 
 .data-table tbody tr:last-child td {
@@ -701,7 +699,7 @@ input:focus, select:focus, textarea:focus {
 
 .employee-name {
   font-weight: 600;
-  color: #fff;
+  color: var(--text-primary);
 }
 
 /* ---- Buttons ---- */
@@ -733,13 +731,13 @@ input:focus, select:focus, textarea:focus {
 }
 
 .btn-ghost {
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--bg-surface);
   border-color: var(--border-medium);
   color: var(--text-primary);
 }
 
 .btn-ghost:hover {
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--bg-surface-hover);
   border-color: rgba(255,255,255,0.2);
   transform: translateY(-1px);
 }

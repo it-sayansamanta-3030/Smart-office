@@ -56,7 +56,7 @@ export default function Settings({ currentTheme, setTheme }) {
                     <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                       <div style={{ 
                         width: '40px', height: '40px', borderRadius: '8px', 
-                        background: isActive ? 'var(--gradient-primary)' : 'rgba(255,255,255,0.05)',
+                        background: isActive ? 'var(--gradient-primary)' : 'var(--border-medium)',
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                         color: isActive ? '#fff' : 'var(--text-secondary)'
                       }}>
