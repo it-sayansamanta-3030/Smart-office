@@ -6,12 +6,26 @@ import Attendance from './pages/Attendance';
 import Tasks from './pages/Tasks';
 import EmergencyMode from './pages/EmergencyMode';
 import Login from './pages/Login';
+import Settings from './pages/Settings';
 import { ShieldAlert, X } from 'lucide-react';
 import { API_BASE } from './api';
 
 export default function App() {
   const [toast, setToast] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [currentTheme, setCurrentTheme] = useState('theme-dark');
+
+  // Load theme on mount
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('smartoffice_theme');
+    if (savedTheme) setCurrentTheme(savedTheme);
+  }, []);
+
+  // Apply theme to document and save
+  useEffect(() => {
+    document.documentElement.className = currentTheme;
+    localStorage.setItem('smartoffice_theme', currentTheme);
+  }, [currentTheme]);
 
   // Check auth state on load
   useEffect(() => {
@@ -62,6 +76,7 @@ export default function App() {
           <Route path="/attendance" element={<Attendance />} />
           <Route path="/tasks" element={<Tasks />} />
           <Route path="/emergency" element={<EmergencyMode />} />
+          <Route path="/settings" element={<Settings currentTheme={currentTheme} setTheme={setCurrentTheme} />} />
         </Routes>
       </main>
 

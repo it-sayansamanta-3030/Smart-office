@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, Users, Map, ListTodo, Activity, Menu, X, LogOut } from 'lucide-react';
+import { LayoutDashboard, Users, Map, ListTodo, Activity, Menu, X, LogOut, Settings as SettingsIcon } from 'lucide-react';
 import { useState } from 'react';
 
 export default function Sidebar({ onLogout }) {
@@ -8,6 +8,7 @@ export default function Sidebar({ onLogout }) {
   const links = [
     { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
     { to: '/attendance', icon: Users, label: 'Attendance' },
+    { to: '/settings', icon: SettingsIcon, label: 'Settings' },
   ];
 
   return (
