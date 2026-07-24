@@ -24,6 +24,11 @@ export default function App() {
     setIsAuthenticated(true);
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem('admin_office_auth');
+    setIsAuthenticated(false);
+  };
+
   useEffect(() => {
     // Connect to SSE stream for real-time ESP32 ping alerts
     const source = new EventSource(`${API_BASE}/esp32/stream`);
@@ -50,7 +55,7 @@ export default function App() {
 
   return (
     <div className="app-layout bg-bgPrimary relative">
-      <Sidebar />
+      <Sidebar onLogout={handleLogout} />
       <main className="main-content">
         <Routes>
           <Route path="/" element={<Dashboard />} />

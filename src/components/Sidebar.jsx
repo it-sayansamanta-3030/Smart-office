@@ -1,8 +1,8 @@
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, Users, Map, ListTodo, Activity, Menu, X } from 'lucide-react';
+import { LayoutDashboard, Users, Map, ListTodo, Activity, Menu, X, LogOut } from 'lucide-react';
 import { useState } from 'react';
 
-export default function Sidebar() {
+export default function Sidebar({ onLogout }) {
   const [isOpen, setIsOpen] = useState(false);
   const toggle = () => setIsOpen(!isOpen);
   const links = [
@@ -43,7 +43,7 @@ export default function Sidebar() {
           ))}
         </nav>
 
-        <div style={{ padding: '0 16px', marginTop: 'auto', marginBottom: '16px' }}>
+        <div style={{ padding: '0 16px', marginTop: 'auto', marginBottom: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
           <NavLink 
             to="/emergency" 
             onClick={() => setIsOpen(false)}
@@ -53,6 +53,18 @@ export default function Sidebar() {
             <Activity color="#ef4444" />
             <span style={{ fontWeight: 600 }}>Emergency Mode</span>
           </NavLink>
+
+          <button 
+            onClick={() => {
+              setIsOpen(false);
+              onLogout && onLogout();
+            }}
+            className="sidebar-link"
+            style={{ width: '100%', textAlign: 'left', border: '1px solid rgba(255, 255, 255, 0.05)', backgroundColor: 'rgba(255, 255, 255, 0.02)', cursor: 'pointer' }}
+          >
+            <LogOut />
+            <span style={{ fontWeight: 500 }}>Sign Out</span>
+          </button>
         </div>
 
         <div className="sidebar-footer">
